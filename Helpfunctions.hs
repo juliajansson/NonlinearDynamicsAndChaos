@@ -1,18 +1,18 @@
 import Data.Complex
 import Data.List
 type C=Complex Float
-type Width=Float
-type Height=Float
+type Width=Int
+type Height=Int
 type X=Float
 type Y=Float
 
 --f::C->Int
-data Crop = Crop {lowerLeft::C, higherRight::C, width::Width, height::Height}
+data Crop = Rectangle {lowerLeft::C, higherRight::C, width::Width, height::Height}
 
-type AllPoints = [[C]]
+type Grid = [[C]]
 
 --Takes the lists of floating points (Real part and Imaginary part) and permutates them with help of helpfunction cross to the matrix of all points.
---doAll::[X]->[Y]->AllPoints
+--doAll::[X]->[Y]->Grid
 
 --List crossing to matrix.
 --cross::[a]->[b]->[[(a,b)]]
@@ -66,16 +66,27 @@ test=map (map tupleToComplex )(cross [0.0,0.5,1.0] [0.0,0.5,1.0])==transpose exa
 --I reconsider and realise I want a help function that can give me the real side from the two lowerLeft and higherRight points
 
 complexToFloatx::C->C->Width->[X]
-complexToFloatx a b x=[realPart a+n*(realSide a b)/(x-1)|n<-[0..(x-1)]]
-
+complexToFloatx a b x=[realPart a+step*(fromIntegral n)|n<-[0..(x-1)]]
+                      where step=(realSide a b)/fromIntegral(x-1)
 realSide::C->C->Float
-realSide a b=abs ((realPart a) - (realPart b))
+realSide a b=(realPart b) - (realPart a)
 
 --Then complexToFloaty can be defined similarly
 
 complexToFloaty::C->C->Height->[Y]
-complexToFloaty a b y=[realPart a+n*(realSide a b)/(y-1)|n<-[0..(y-1)]]
+complexToFloaty a b y=[realPart a+step*(fromIntegral n)|n<-[0..(y-1)]]
+                      where step=(imagSide a b)/fromIntegral(y-1)
+
+imagSide::C->C->Float
+imagSide a b=(imagPart b) - (imagPart a)
 
 test2=cross (complexToFloatx (0:+0) (1:+1) 3) (complexToFloaty (0:+0) (1:+1) 3)
 
 --Yay it worked :)
+-----------------------------------------------------------------------------
+--Defining the top-level function makeGrid
+makeGrid::Crop->Grid
+makeGrid (Rectangle a b x y)=map (map tupleToComplex) (cross xs ys)
+                             where xs=complexToFloatx a b x
+                                   ys=complexToFloaty a b y
+--It worked excellently :)
