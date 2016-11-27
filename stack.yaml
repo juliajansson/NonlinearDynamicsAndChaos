@@ -1,0 +1,7 @@
+resolver: lts-7.9
+
+packages:
+- '.'
+
+extra-deps:
+- gloss-raster-1.10.2.4
