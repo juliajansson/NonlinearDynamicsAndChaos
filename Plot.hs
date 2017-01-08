@@ -14,8 +14,87 @@ type X=Float
 type Y=Float
 type Time=Float
 
+----- Main, using frametestfexample and different constants
+
+main=test
+
+test :: IO ()
+test = do
+  animateField
+    (InWindow "fractal" windowSize (50, 10))
+    (pixelSize, pixelSize)
+    plot
+  where
+    windowSize = (1000, 1000)
+    pixelSize = 1
+
+------Parameterized polynomial and its derivative
+f::C->C->C
+f a z=(z^2-(1:+0))*(z^2+a)
+
+f'::C->C->C
+f' a z=(4:+0)*z^3+(2:+0)*a*z-(2:+0)*z
+
+------Newtons iteration function for the polynomial
 newton::(C->C)->(C->C)->C->C
 newton f f' z=z-(f z)/(f' z)
+
+fnewton a = newton (f a) (f' a)
+
+-----The critical point c_1
+c_1::C->C
+c_1 a=1
+
+-----The critical point c_2
+c_2::C->C
+c_2 a =sqrt((1-a)/6)
+
+----The critical point c_3
+c_3::C->C
+c_3 a =(-sqrt((1-a)/6))
+
+----The orbit for the critical point
+criticalorbit::C->[C]
+criticalorbit a = take 25 (iterate (fnewton a) (c_2 a))
+
+toplot1::C->Int
+toplot1 a = testf a (c_1 a)
+
+toplot2::C->Int
+toplot2 a = testf a (c_2 a)
+
+toplot3::C->Int
+toplot3 a = testf a (c_3 a)
+
+plot::Time->Point->Color
+plot t a= rgbI c c c
+  where c=20*(toplot3 (pointToComplex a))
+
+----Plot the difference between toplot2 and toplot3 to see if they are identical
+plotdifference::Time->Point->Color
+plotdifference t a= rgbI c c c
+  where c=20*(toplot3 (pointToComplex a)- toplot2 (pointToComplex a))
+
+-----Helpfunctions for framtestfexample
+eps=1e-6
+
+-----Fixerar a och varierar seed för varje plot, sen varierar a med tiden
+testf::C->C->Int
+testf a seed= length (take 100 (takeWhile (>eps) skillnader))
+  where 
+    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
+    grannpar = zip orbit (tail orbit)
+    orbit = iterate fa seed
+    fa=fnewton a
+      
+frametestf::C->Point->Color
+frametestf a p= rgbI c c c
+  where c=20*(testf a (pointToComplex p))
+
+frametestfexample::Time->Point->Color
+frametestfexample t =frametestf (t:+0)
+
+-------
 
 i::C
 i=0:+1
@@ -44,7 +123,6 @@ a=newton fig184a fig184a'
 
 testa= length . take 100 . takeWhile (\z->magnitude z<4) . iterate a
 
-eps=1e-6
 testa' c = length (take 100 (takeWhile (>eps) skillnader))
   where 
     skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
@@ -80,31 +158,7 @@ frametestb time p= rgbI c c c
 
 ---------------------------------------------------------------------------------------
 
-f::Float->C->C
-f a z=(z^2-(1:+0))*(z^2+(a:+0))
 
-f'::Float->C->C
-f' a z=(4:+0)*z^3+(2:+0)*(a:+0)*z-(2:+0)*z
-
-fnewton a = newton (f a) (f' a)
-
-testf::Float->(C->Int)
-testf a = length . take 100 . takeWhile (\z->magnitude z<4) . iterate (fnewton a)
-
-testf'::C->Float->Int
-testf' c a = length (take 100 (takeWhile (>eps) skillnader))
-  where 
-    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
-    grannpar = zip bs (tail bs)
-    bs = iterate fa c
-    fa=fnewton a
-      
-frametestf::Float->Time->Point->Color
-frametestf a time p= rgbI c c c
-  where c=20*(testf' (pointToComplex p) a)
-
-frametestfexample::Time->Point->Color
-frametestfexample=frametestf 0.18
 
 ----------------------------------------------------------------------
 disc::C->Bool
@@ -119,15 +173,20 @@ myframe time p= rgbI c c c
   where c=func p
           --cycleColorF (time*(fromIntegral (func p)))
 -------------------------------------------------------------------------
+{-
+Gammal version som inte varierar a
 
-main=test
+frametestf::Float->Time->Point->Color
+frametestf a time p= rgbI c c c
+  where c=20*(testf' (pointToComplex p) a)
 
-test :: IO ()
-test = do
-  animateField
-    (InWindow "fractal" windowSize (50, 10))
-    (pixelSize, pixelSize)
-    frametestfexample
-  where
-    windowSize = (500, 500)
-    pixelSize = 1
+frametestfexample::Time->Point->Color
+frametestfexample t =frametestf 1
+-}
+
+{-
+Gammal version som kollar om magnituden på det komplexa talet är mindre än 4 iställer för algoritmen som boken föreslår
+
+testf'::C->(C->Int)
+testf' a = length . take 100 . takeWhile (\z->magnitude z<4) . iterate (fnewton a)
+-}
