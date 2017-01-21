@@ -23,7 +23,7 @@ test = do
   animateField
     (InWindow "fractal" windowSize (50, 10))
     (pixelSize, pixelSize)
-    colorplot
+    colorplotWithGrid
   where
     windowSize = (1000, 1000)
     pixelSize = 1
@@ -227,6 +227,38 @@ myframe time p= rgbI c c c
   where c=func p
           --cycleColorF (time*(fromIntegral (func p)))
 -------------------------------------------------------------------------
+---Patrik's grid code
+gridStep :: Float
+gridStep = 0.2
+
+onGrid :: Point -> Bool
+onGrid p = (xnear && ynear && (xvnear || yvnear)) || xaxis || yaxis
+  where c = pointToComplex p
+        x = realPart c
+        y = imagPart c
+
+        xaxis  = near x (10*gridStep) 0.002
+        yaxis  = near y (10*gridStep) 0.002
+
+        xnear  = near x gridStep 0.1
+        xvnear = near x gridStep 0.01
+
+        ynear  = near y gridStep 0.1
+        yvnear = near y gridStep 0.01
+
+near x' step eps = abs (x - fromInteger (round x)) < eps
+  where x = x' / step
+
+gridColor col = black
+gridColor' col = mixColors 0.5 0.5 col black
+             -- makeColor (1-r) (1-g) (1-b) (1-a)
+  where (r,g,b,a) = rgbaOfColor col
+
+colorplotWithGrid::Time->Point->Color
+colorplotWithGrid t a | onGrid a   = gridColor col
+                      | otherwise  = col
+  where col = colorplot t a
+
 {-
 Gammal version som inte varierar a
 
