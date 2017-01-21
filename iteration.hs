@@ -6,6 +6,15 @@ newton f f' z=z-(f z)/(f' z)
 i::C
 i=0:+1
 
+--func::Float->C->C
+--func a z=(z^2-1)*(z^2+a)
+
+--func'::Float->C->C
+--func' a z=4*z^3+2*a*z-2*z
+
+--test= newton (func a) (func' a)
+-------------------------------------------------------------------------------
+
 --to get fig 18.4a
 fig184a::C->C
 fig184a  z=z^2+1
@@ -15,7 +24,7 @@ fig184a' z=2*z
 
 a=newton fig184a fig184a'
 
-testa= take 5.iterate a
+testa= take 10.iterate a
 
 --to get 18.4b
 fig184b::C->C
@@ -28,6 +37,7 @@ b=newton fig184b fig184b'
 
 testb= take 5.iterate b
 
+---------------------------------------------------------------------------
 --minus
 minus::C->C
 minus z=z^2-1
