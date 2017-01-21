@@ -157,6 +157,8 @@ complexToPoint c=(realPart c,imagPart c)
 pointToComplex::Point->C
 pointToComplex (a,b)=((2*a):+(2*b))
 
+--((0.15*(a+1)):+(0.15*b))
+
 --standard=(-1:+-1) (1:+1)
 
 --scale::((C->C)->C)->C
