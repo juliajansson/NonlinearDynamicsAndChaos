@@ -23,10 +23,58 @@ test = do
   animateField
     (InWindow "fractal" windowSize (50, 10))
     (pixelSize, pixelSize)
-    plot
+    colorplot
   where
     windowSize = (1000, 1000)
     pixelSize = 1
+
+-----------------------------------------------------------------------
+
+--New color graphs stuff
+
+--The roots of the function
+roots::C->[C]
+roots a=[(1:+0),((-1):+0),sqrt(-a),(-sqrt(-a))]
+
+-----Fixerar a och varierar seed för varje plot, sen varierar a med tiden, we now change testf to also give out the root to which it converges
+colortestf::C->C->(Int,Maybe Int)
+colortestf a seed=(efficiency,root)
+  where
+    efficiency = length (take 100 (takeWhile (>eps) skillnader))
+    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
+    grannpar   = zip orbit (tail orbit)
+    orbit      = iterate fa seed
+    fa         = fnewton a
+    last       = orbit!!efficiency
+    root       = rootcompare last (roots a)
+
+rootcompare::C->[C]->Maybe Int
+rootcompare z rs |magnitude((rs!!0)-z)<eps=Just 0
+                 |magnitude((rs!!1)-z)<eps=Just 1
+                 |magnitude((rs!!2)-z)<eps=Just 2
+                 |magnitude((rs!!3)-z)<eps=Just 3
+                 |otherwise               =Nothing
+
+colorplot::Time->Point->Color
+colorplot t a|mi==Nothing=rgbI si si si
+             |mi==Just 0 =rgbI si 0 0
+             |mi==Just 1 =rgbI 0 si 0
+             |mi==Just 2 =rgbI 0 0 si
+             |mi==Just 3 =rgbI si si 0
+  where (i,mi)=(colortoplot3 (pointToComplex a))
+        si    =20*i
+
+
+colortoplot1::C->(Int,Maybe Int)
+colortoplot1 a = colortestf a (c_1 a)
+
+--colortoplot2::C->Int
+colortoplot2 a = colortestf a (c_2 a)
+
+--colortoplot3::C->Int
+colortoplot3 a = colortestf a (c_3 a)
+
+----------------------------------------------------------------------------
 
 ------Parameterized polynomial and its derivative
 f::C->C->C
@@ -53,6 +101,8 @@ c_2 a =sqrt((1-a)/6)
 c_3::C->C
 c_3 a =(-sqrt((1-a)/6))
 
+-------------------------------------------------------------------------
+
 ----The orbit for the critical point
 criticalorbit::C->[C]
 criticalorbit a = take 25 (iterate (fnewton a) (c_2 a))
@@ -65,6 +115,8 @@ toplot2 a = testf a (c_2 a)
 
 toplot3::C->Int
 toplot3 a = testf a (c_3 a)
+
+---------------------------------------------------------------------------
 
 plot::Time->Point->Color
 plot t a= rgbI c c c
@@ -94,7 +146,7 @@ frametestf a p= rgbI c c c
 frametestfexample::Time->Point->Color
 frametestfexample t =frametestf (t:+0)
 
--------
+--------------------------------------------------------------------------
 
 i::C
 i=0:+1
