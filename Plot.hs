@@ -55,6 +55,36 @@ rootcompare z rs |magnitude((rs!!0)-z)<eps=Just 0
                  |magnitude((rs!!3)-z)<eps=Just 3
                  |otherwise               =Nothing
 
+gridStep :: Float
+gridStep = 0.2
+onGrid :: Point -> Bool
+onGrid p = (xnear && ynear && (xvnear || yvnear)) || xaxis || yaxis
+  where c = pointToComplex p
+        x = realPart c
+        y = imagPart c
+
+        xaxis  = near x (10*gridStep) 0.002
+        yaxis  = near y (10*gridStep) 0.002
+
+        xnear  = near x gridStep 0.1
+        xvnear = near x gridStep 0.01
+
+        ynear  = near y gridStep 0.1
+        yvnear = near y gridStep 0.01
+
+near x' step eps = abs (x - fromInteger (round x)) < eps
+  where x = x' / step
+
+gridColor col = black
+gridColor' col = mixColors 0.5 0.5 col black
+             -- makeColor (1-r) (1-g) (1-b) (1-a)
+  where (r,g,b,a) = rgbaOfColor col
+
+colorplotWithGrid::Time->Point->Color
+colorplotWithGrid t a | onGrid a   = gridColor col
+                      | otherwise  = col
+  where col = colorplot t a
+
 colorplot::Time->Point->Color
 colorplot t a|mi==Nothing=rgbI si si si
              |mi==Just 0 =rgbI si 0 0
@@ -133,12 +163,12 @@ eps=1e-6
 -----Fixerar a och varierar seed för varje plot, sen varierar a med tiden
 testf::C->C->Int
 testf a seed= length (take 100 (takeWhile (>eps) skillnader))
-  where 
+  where
     skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
     grannpar = zip orbit (tail orbit)
     orbit = iterate fa seed
     fa=fnewton a
-      
+
 frametestf::C->Point->Color
 frametestf a p= rgbI c c c
   where c=20*(testf a (pointToComplex p))
@@ -178,11 +208,11 @@ a=newton fig184a fig184a'
 testa= length . take 100 . takeWhile (\z->magnitude z<4) . iterate a
 
 testa' c = length (take 100 (takeWhile (>eps) skillnader))
-  where 
+  where
     skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
     grannpar = zip as (tail as)
     as = iterate a c
-      
+
 
 frametesta::Time->Point->Color
 frametesta time p= rgbI c c c
@@ -200,11 +230,11 @@ b=newton fig184b fig184b'
 testb= length . take 100 . takeWhile (\z->magnitude z<4) . iterate b
 
 testb' c = length (take 100 (takeWhile (>eps) skillnader))
-  where 
+  where
     skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
     grannpar = zip bs (tail bs)
     bs = iterate b c
-      
+
 
 frametestb::Time->Point->Color
 frametestb time p= rgbI c c c
@@ -216,7 +246,7 @@ frametestb time p= rgbI c c c
 
 ----------------------------------------------------------------------
 disc::C->Bool
-disc a = (magnitude a)<=1 
+disc a = (magnitude a)<=1
 
 func::Point->Int
 func a=if disc (pointToComplex a) then 255
