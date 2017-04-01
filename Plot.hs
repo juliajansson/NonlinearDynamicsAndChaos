@@ -21,20 +21,36 @@ main=test
 test :: IO ()
 test = do
   animateField
-    (InWindow "fractal" windowSize (50, 10))
+    (InWindow "fractal" windowSize (2, 2))
     (pixelSize, pixelSize)
-    colorplotWithGrid
+    colorplot
   where
     windowSize = (1000, 1000)
     pixelSize = 1
 
 -----------------------------------------------------------------------
+---Efficiency test
+efficiencytest::C->C->Float->Int
+efficiencytest a seed e=efficiency
+  where
+    efficiency = length (take 100 (takeWhile (>e) skillnader))
+    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
+    grannpar   = zip orbit (tail orbit)
+    orbit      = iterate fa seed
+    fa         = fnewton a
+
+efficiencylist::[Int]
+efficiencylist = [efficiencytest a (c_2 a) (10**(-j)) | j <- [1..20]]
+
+  where a = 10000
+--2*i=[2,3,4,4,5,5,5,5,5,6]
+--100=[23,23,24,24,24,25,25,25,25,25]
 
 --New color graphs stuff
 
 --The roots of the function
 roots::C->[C]
-roots a=[(1:+0),((-1):+0),sqrt(-a),(-sqrt(-a))]
+roots a=[(1:+0),((-1):+0),sqrt(a)*i,(-sqrt(a)*i)]
 
 -----Fixerar a och varierar seed för varje plot, sen varierar a med tiden, we now change testf to also give out the root to which it converges
 colortestf::C->C->(Int,Maybe Int)
@@ -61,7 +77,7 @@ colorplot t a|mi==Nothing=rgbI si si si
              |mi==Just 1 =rgbI 0 si 0
              |mi==Just 2 =rgbI 0 0 si
              |mi==Just 3 =rgbI si si 0
-  where (i,mi)=(colortoplot3 (pointToComplex a))
+  where (i,mi)=(colortoplot6 (pointToComplex a))
         si    =20*i
 
 
@@ -73,6 +89,12 @@ colortoplot2 a = colortestf a (c_2 a)
 
 --colortoplot3::C->Int
 colortoplot3 a = colortestf a (c_3 a)
+
+colortoplot4 a = colortestf a (c_4 a)
+
+colortoplot5 a = colortestf a (c_5 a)
+
+colortoplot6 a = colortestf a (c_6 a)
 
 ----------------------------------------------------------------------------
 
@@ -91,15 +113,24 @@ fnewton a = newton (f a) (f' a)
 
 -----The critical point c_1
 c_1::C->C
-c_1 a=1
+c_1 a=sqrt((1-a)/6)
 
 -----The critical point c_2
 c_2::C->C
-c_2 a =sqrt((1-a)/6)
+c_2 a =(-sqrt((1-a)/6))
 
 ----The critical point c_3
 c_3::C->C
-c_3 a =(-sqrt((1-a)/6))
+c_3 a =1
+
+c_4::C->C
+c_4 a =(-1)
+
+c_5::C->C
+c_5 a=sqrt(a)*i
+
+c_6::C->C
+c_6 a=(-sqrt(a)*i)
 
 -------------------------------------------------------------------------
 
@@ -138,7 +169,8 @@ testf a seed= length (take 100 (takeWhile (>eps) skillnader))
     grannpar = zip orbit (tail orbit)
     orbit = iterate fa seed
     fa=fnewton a
-      
+
+     
 frametestf::C->Point->Color
 frametestf a p= rgbI c c c
   where c=20*(testf a (pointToComplex p))
@@ -155,9 +187,10 @@ complexToPoint::C->Point
 complexToPoint c=(realPart c,imagPart c)
 
 pointToComplex::Point->C
-pointToComplex (a,b)=((2*a):+(2*b))
+pointToComplex (a,b)=((0.15*(a+1)):+(0.15*b))
 
---((0.15*(a+1)):+(0.15*b))
+--(0.5*(a+2)):+(0.5*b)
+--((2*a):+(2*b))
 
 --standard=(-1:+-1) (1:+1)
 
@@ -260,18 +293,18 @@ colorplotWithGrid t a | onGrid a   = gridColor col
   where col = colorplot t a
 
 {-
-Gammal version som inte varierar a
+--Gammal version som inte varierar a
 
 frametestf::Float->Time->Point->Color
 frametestf a time p= rgbI c c c
-  where c=20*(testf' (pointToComplex p) a)
+  where c=20*(testf (pointToComplex p) (a:+0))
 
 frametestfexample::Time->Point->Color
-frametestfexample t =frametestf 1
+frametestfexample t =frametestf 1 0
 -}
 
 {-
-Gammal version som kollar om magnituden på det komplexa talet är mindre än 4 iställer för algoritmen som boken föreslår
+--Gammal version som kollar om magnituden på det komplexa talet är mindre än 4 iställer för algoritmen som boken föreslår
 
 testf'::C->(C->Int)
 testf' a = length . take 100 . takeWhile (\z->magnitude z<4) . iterate (fnewton a)
