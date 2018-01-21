@@ -1,21 +1,23 @@
-import Data.Complex
-import Data.List
-import Graphics.Gloss
-import System.Environment
-import Graphics.Gloss.Data.Color (Color)
+import Data.Complex --Operating on complex numbers
+import Data.List --Operating on lists
+import Graphics.Gloss --A graphics package
+import System.Environment 
+import Graphics.Gloss.Data.Color (Color) --More graphics
 import Graphics.Gloss.Data.Display (Display(InWindow))
 import Graphics.Gloss.Interface.Pure.Animate (animate)
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Raster.Field (animateField, rgbI)
-type C=Complex Float
+
+--Some type declarations
+type C=Complex Float 
 type Width=Int
 type Height=Int
 type X=Float
 type Y=Float
 type Time=Float
 
------ Main, using frametestfexample and different constants
-
+-------------------------------------------------------------------------------------------------------------
+----- Main, using colorplot
 main=test
 
 test :: IO ()
@@ -28,31 +30,14 @@ test = do
     windowSize = (1000, 1000)
     pixelSize = 1
 
------------------------------------------------------------------------
----Efficiency test
-efficiencytest::C->C->Float->Int
-efficiencytest a seed e=efficiency
-  where
-    efficiency = length (take 100 (takeWhile (>e) skillnader))
-    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
-    grannpar   = zip orbit (tail orbit)
-    orbit      = iterate fa seed
-    fa         = fnewton a
-
-efficiencylist::[Int]
-efficiencylist = [efficiencytest a (c_2 a) (10**(-j)) | j <- [1..20]]
-
-  where a = 10000
---2*i=[2,3,4,4,5,5,5,5,5,6]
---100=[23,23,24,24,24,25,25,25,25,25]
-
+-----------------------------------------------------------------------------------------------------
 --New color graphs stuff
 
 --The roots of the function
 roots::C->[C]
 roots a=[(1:+0),((-1):+0),sqrt(a)*i,(-sqrt(a)*i)]
 
------Fixerar a och varierar seed för varje plot, sen varierar a med tiden, we now change testf to also give out the root to which it converges
+-----Fixates a och varies the seed for every plot, then a varies over time, we now change testf to also give out the root to which it converges
 colortestf::C->C->(Int,Maybe Int)
 colortestf a seed=(efficiency,root)
   where
@@ -291,6 +276,25 @@ colorplotWithGrid::Time->Point->Color
 colorplotWithGrid t a | onGrid a   = gridColor col
                       | otherwise  = col
   where col = colorplot t a
+  
+-----------------------------------------------------------------------
+---Efficiency test
+efficiencytest::C->C->Float->Int
+efficiencytest a seed e=efficiency
+  where
+    efficiency = length (take 100 (takeWhile (>e) skillnader))
+    skillnader = map (\(x1,x2)-> magnitude (x1-x2)) grannpar
+    grannpar   = zip orbit (tail orbit)
+    orbit      = iterate fa seed
+    fa         = fnewton a
+
+efficiencylist::[Int]
+efficiencylist = [efficiencytest a (c_2 a) (10**(-j)) | j <- [1..20]]
+
+  where a = 10000
+--2*i=[2,3,4,4,5,5,5,5,5,6]
+--100=[23,23,24,24,24,25,25,25,25,25]
+------------------------------------------------------------------------------
 
 {-
 --Gammal version som inte varierar a
